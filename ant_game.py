@@ -29,6 +29,9 @@ class Leaf(BaseGameObject):
         self.x = random.randint(1, SIZE_SCREEN.get('x') - self.size)
         self.y = random.randint(1, SIZE_SCREEN.get('y') - self.size)
 
+    def hide_leaf(self):
+        self.x = -100
+        self.y = -100
 
 class AntHill(BaseGameObject):
     def __init__(self, *args):
@@ -40,21 +43,36 @@ class AntHill(BaseGameObject):
 
 
 class Ant(BaseGameObject):
-    def run(self, leaf_x, leaf_y, speed):
-        if self.x < leaf_x:
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.__catch_leaf = False
+
+    def run(self, dest_x, dest_y, speed):
+        if self.x < dest_x:
             self.x += speed
-        elif self.x > leaf_x:
+        elif self.x > dest_x:
             self.x -= speed
 
-        if self.y < leaf_y:
+        if self.y < dest_y:
             self.y += speed
-        elif self.y > leaf_y:
+        elif self.y > dest_y:
             self.y -= speed
+
+    def catch_leaf_switcher(self):
+        if self.__catch_leaf:
+            self.__catch_leaf = False
+        else:
+            self.__catch_leaf = True
+
+    @property
+    def catch_leaf(self):
+        return self.__catch_leaf
 
 def intersect(x1, y1, size1, x2, y2, size2):
     if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
         return True
     return False
+
 
 screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
 
@@ -62,7 +80,7 @@ ant = Ant(50, 50, 10, screen, BLACK)
 leaf_x = random.randint(1, 400)
 leaf_y = random.randint(1, 400)
 leaf = Leaf(leaf_x, leaf_y, 10, screen, GREEN)
-anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 20, screen, BROWN)
+anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, screen, BROWN)
 
 while not game_exit:
     for event in pygame.event.get():
@@ -72,15 +90,23 @@ while not game_exit:
     screen.fill(WHITE)
 
     if intersect(ant.x, ant.y, ant.size, leaf.x, leaf.y, leaf.size):
+        ant.catch_leaf_switcher()
+        leaf.hide_leaf()
+    if intersect(ant.x, ant.y, ant.size, anthill.x, anthill.y, anthill.size):
+        ant.catch_leaf_switcher()
         leaf.generate_new_coords
 
     ant.render()
     leaf.render()
+    print(leaf.x, leaf.y)
     anthill.render()
 
-    ant.run(leaf.x, leaf.y, 10)
-    print(f'ant coords:{ant.x} {ant.y}')
-    print(f'leaf coords:{leaf.x} {leaf.y}')
+    if not ant.catch_leaf:
+        ant.run(leaf.x, leaf.y, 10)
+    else:
+        ant.run(anthill.x, anthill.y, 10)
+    # print(f'ant coords:{ant.x} {ant.y}')
+    # print(f'leaf coords:{leaf.x} {leaf.y}')
 
     pygame.display.update()
     pygame.time.delay(150)
