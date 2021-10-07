@@ -1,6 +1,8 @@
 import pygame
 import random
 
+from fsm import FSM
+
 
 pygame.init()
 
@@ -46,17 +48,30 @@ class Ant(BaseGameObject):
     def __init__(self, *args):
         super().__init__(*args)
         self.__catch_leaf = False
+        self.brain = FSM()
+        self.brain.set_state(self.find_leaf)
 
-    def run(self, dest_x, dest_y, speed):
-        if self.x < dest_x:
+    def find_leaf(self, leaf_x, leaf_y, speed):
+        if self.x < leaf_x:
             self.x += speed
-        elif self.x > dest_x:
+        elif self.x > leaf_x:
             self.x -= speed
 
-        if self.y < dest_y:
+        if self.y < leaf_y:
             self.y += speed
-        elif self.y > dest_y:
+        elif self.y > leaf_y:
             self.y -= speed
+
+    # def run(self, dest_x, dest_y, speed):
+    #     if self.x < dest_x:
+    #         self.x += speed
+    #     elif self.x > dest_x:
+    #         self.x -= speed
+    #
+    #     if self.y < dest_y:
+    #         self.y += speed
+    #     elif self.y > dest_y:
+    #         self.y -= speed
 
     def catch_leaf_switcher(self):
         if self.__catch_leaf:
@@ -68,6 +83,10 @@ class Ant(BaseGameObject):
     def catch_leaf(self):
         return self.__catch_leaf
 
+    def update(self, *args, **kwargs):
+        self.brain.update(*args, **kwargs)
+
+
 def intersect(x1, y1, size1, x2, y2, size2):
     if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
         return True
@@ -76,10 +95,10 @@ def intersect(x1, y1, size1, x2, y2, size2):
 
 screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
 
-ant = Ant(50, 50, 10, screen, BLACK)
 leaf_x = random.randint(1, 400)
 leaf_y = random.randint(1, 400)
 leaf = Leaf(leaf_x, leaf_y, 10, screen, GREEN)
+ant = Ant(50, 50, 10, screen, BLACK)
 anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, screen, BROWN)
 
 
@@ -105,9 +124,10 @@ while not game_exit:
     anthill.render()
 
     if not ant.catch_leaf:
-        ant.run(leaf.x, leaf.y, 10)
-    else:
-        ant.run(anthill.x, anthill.y, 10)
+        # ant.run(leaf.x, leaf.y, 10)
+        ant.update(leaf.x, leaf.y, 10)
+    # else:
+        # ant.run(anthill.x, anthill.y, 10)
 
     pygame.display.update()
     pygame.time.delay(150)
