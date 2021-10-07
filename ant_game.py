@@ -82,11 +82,15 @@ leaf_y = random.randint(1, 400)
 leaf = Leaf(leaf_x, leaf_y, 10, screen, GREEN)
 anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, screen, BROWN)
 
+
 while not game_exit:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_exit = True
 
+    pygame.mouse.set_visible(True)
+    pointer = pygame.mouse.get_pos()
+    pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
     screen.fill(WHITE)
 
     if intersect(ant.x, ant.y, ant.size, leaf.x, leaf.y, leaf.size):
@@ -98,15 +102,12 @@ while not game_exit:
 
     ant.render()
     leaf.render()
-    print(leaf.x, leaf.y)
     anthill.render()
 
     if not ant.catch_leaf:
         ant.run(leaf.x, leaf.y, 10)
     else:
         ant.run(anthill.x, anthill.y, 10)
-    # print(f'ant coords:{ant.x} {ant.y}')
-    # print(f'leaf coords:{leaf.x} {leaf.y}')
 
     pygame.display.update()
     pygame.time.delay(150)
