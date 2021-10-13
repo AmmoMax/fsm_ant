@@ -1,10 +1,12 @@
+import sys
+
 import pygame
 import random
 
 from fsm import FSM
 
 
-pygame.init()
+# pygame.init()
 
 SIZE_SCREEN = {'x': 400, 'y': 400}
 BLACK = [0, 0, 0]
@@ -86,50 +88,69 @@ class Ant(BaseGameObject):
     def update(self, *args, **kwargs):
         self.brain.update(*args, **kwargs)
 
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = self.__get_screen()
+        self.ant = self.__get_ant()
+        self.leaf = self.__get_leaf()
+        self.anthill = self.__get_anthill()
 
-def intersect(x1, y1, size1, x2, y2, size2):
-    if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
-        return True
-    return False
+    def __get_screen(self):
+        pygame.display.set_caption('Ant FSM')
+        screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
+        return screen
+
+    def intersect(self, x1, y1, size1, x2, y2, size2):
+        if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
+            return True
+        return False
+
+    def __get_ant(self):
+        ant = Ant(50, 50, 10, self.screen, BLACK)
+        return ant
+
+    def __get_leaf(self):
+        leaf_x = random.randint(1, 400)
+        leaf_y = random.randint(1, 400)
+        leaf = Leaf(leaf_x, leaf_y, 10, self.screen, GREEN)
+        return leaf
+
+    def __get_anthill(self):
+        anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, self.screen, BROWN)
+        return anthill
+
+    def check_input(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+    def get_mouse_pos(self):
+        pygame.mouse.set_visible(True)
+        pointer = pygame.mouse.get_pos()
+        pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
+        return pointer
 
 
-screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
+    def run(self):
+        while True:
+            self.screen.fill(WHITE)
+            self.check_input()
+            if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.leaf.x, self.leaf.y, self.leaf.size):
+                self.ant.catch_leaf_switcher()
+                self.leaf.hide_leaf()
+            if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.anthill.x, self.anthill.y, self.anthill.size):
+                self.ant.catch_leaf_switcher()
+                self.leaf.generate_new_coords
+            self.ant.render()
+            self.leaf.render()
+            self.anthill.render()
+            if not self.ant.catch_leaf:
+                self.ant.update(self.leaf.x, self.leaf.y, 10)
+            pygame.display.update()
+            pygame.time.delay(150)
 
-leaf_x = random.randint(1, 400)
-leaf_y = random.randint(1, 400)
-leaf = Leaf(leaf_x, leaf_y, 10, screen, GREEN)
-ant = Ant(50, 50, 10, screen, BLACK)
-anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, screen, BROWN)
-
-
-while not game_exit:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_exit = True
-
-    pygame.mouse.set_visible(True)
-    pointer = pygame.mouse.get_pos()
-    pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
-    screen.fill(WHITE)
-
-    if intersect(ant.x, ant.y, ant.size, leaf.x, leaf.y, leaf.size):
-        ant.catch_leaf_switcher()
-        leaf.hide_leaf()
-    if intersect(ant.x, ant.y, ant.size, anthill.x, anthill.y, anthill.size):
-        ant.catch_leaf_switcher()
-        leaf.generate_new_coords
-
-    ant.render()
-    leaf.render()
-    anthill.render()
-
-    if not ant.catch_leaf:
-        # ant.run(leaf.x, leaf.y, 10)
-        ant.update(leaf.x, leaf.y, 10)
-    # else:
-        # ant.run(anthill.x, anthill.y, 10)
-
-    pygame.display.update()
-    pygame.time.delay(150)
-
-pygame.quit()
+if __name__ == '__main__':
+    game = Game()
+    game.run()
