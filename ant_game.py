@@ -1,3 +1,4 @@
+import math
 import sys
 
 import pygame
@@ -53,7 +54,7 @@ class Ant(BaseGameObject):
         self.brain = FSM()
         self.brain.set_state(self.find_leaf)
 
-    def find_leaf(self, leaf_x, leaf_y, speed):
+    def common_run(self, leaf_x, leaf_y, speed):
         if self.x < leaf_x:
             self.x += speed
         elif self.x > leaf_x:
@@ -64,16 +65,20 @@ class Ant(BaseGameObject):
         elif self.y > leaf_y:
             self.y -= speed
 
-    # def run(self, dest_x, dest_y, speed):
-    #     if self.x < dest_x:
-    #         self.x += speed
-    #     elif self.x > dest_x:
-    #         self.x -= speed
-    #
-    #     if self.y < dest_y:
-    #         self.y += speed
-    #     elif self.y > dest_y:
-    #         self.y -= speed
+    def find_leaf(self, leaf_x, leaf_y, speed):
+        self.common_run(leaf_x, leaf_y, speed)
+        if self.get_distance(leaf_x, leaf_y) < 5:
+            self.brain.set_state(self.go_home)
+
+    def go_home(self, anthill_x, anthill_y, speed):
+        self.common_run(anthill_x, anthill_y, speed)
+        if self.get_distance(anthill_x, anthill_y) < 5:
+            self.brain.set_state(self.find_leaf)
+
+    def get_distance(self, target_x, target_y):
+        dist = math.sqrt((target_x - self.x) ^ 2 + (target_y - self.y) ^ 2)
+        print(dist)
+        return dist
 
     def catch_leaf_switcher(self):
         if self.__catch_leaf:
@@ -137,15 +142,18 @@ class Game:
         while True:
             self.screen.fill(WHITE)
             self.check_input()
-            if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.leaf.x, self.leaf.y, self.leaf.size):
-                self.ant.catch_leaf_switcher()
-                self.leaf.hide_leaf()
-            if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.anthill.x, self.anthill.y, self.anthill.size):
-                self.ant.catch_leaf_switcher()
-                self.leaf.generate_new_coords
+
+            # if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.leaf.x, self.leaf.y, self.leaf.size):
+            #     self.ant.catch_leaf_switcher()
+            #     self.leaf.hide_leaf()
+            # if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.anthill.x, self.anthill.y, self.anthill.size):
+            #     self.ant.catch_leaf_switcher()
+            #     self.leaf.generate_new_coords
+
             self.ant.render()
             self.leaf.render()
             self.anthill.render()
+
             if not self.ant.catch_leaf:
                 self.ant.update(self.leaf.x, self.leaf.y, 10)
             pygame.display.update()
