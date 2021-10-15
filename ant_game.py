@@ -6,14 +6,14 @@ import random
 from fsm import FSM
 
 
-# pygame.init()
-
 SIZE_SCREEN = {'x': 400, 'y': 400}
 BLACK = [0, 0, 0]
 WHITE = [255, 255, 255]
-GREEN = [0, 255, 0]
+GREEN = [0, 100, 0]
 BROWN = [128, 0, 0]
+GREEN_GRASS = [85, 107, 47]
 game_exit = False
+
 
 class BaseGameObject:
     def __init__(self, x, y, size, screen, color):
@@ -36,6 +36,7 @@ class Leaf(BaseGameObject):
     def hide_leaf(self):
         self.x = -100
         self.y = -100
+
 
 class AntHill(BaseGameObject):
     def __init__(self, *args):
@@ -88,6 +89,7 @@ class Ant(BaseGameObject):
     def update(self, *args, **kwargs):
         self.brain.update(*args, **kwargs)
 
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -100,6 +102,7 @@ class Game:
         pygame.display.set_caption('Ant FSM')
         screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
         return screen
+
 
     def intersect(self, x1, y1, size1, x2, y2, size2):
         if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
@@ -132,10 +135,9 @@ class Game:
         pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
         return pointer
 
-
     def run(self):
         while True:
-            self.screen.fill(WHITE)
+            self.screen.fill(GREEN_GRASS)
             self.check_input()
             if self.intersect(self.ant.x, self.ant.y, self.ant.size, self.leaf.x, self.leaf.y, self.leaf.size):
                 self.ant.catch_leaf_switcher()
@@ -150,6 +152,7 @@ class Game:
                 self.ant.update(self.leaf.x, self.leaf.y, 10)
             pygame.display.update()
             pygame.time.delay(150)
+
 
 if __name__ == '__main__':
     game = Game()
