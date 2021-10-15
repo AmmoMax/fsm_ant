@@ -14,6 +14,10 @@ GREEN = [0, 100, 0]
 BROWN = [128, 0, 0]
 GREEN_GRASS = [85, 107, 47]
 ANT_SPEED = 10
+
+# TODO: исправить логику движения муравья т.к. сейчас из за примитивного расчета движения
+# попадаются случаи когда муравей и дошел до цели и не дошел
+CATCH_DISTANCE = 3
 game_exit = False
 
 
@@ -72,18 +76,20 @@ class Ant(BaseGameObject):
         leaf_x = self.game.leaf.x
         leaf_y = self.game.leaf.y
         self.common_run(leaf_x, leaf_y)
-        if self.get_distance(leaf_x, leaf_y) < 5:
+        if int(self.get_distance(leaf_x, leaf_y)) < CATCH_DISTANCE:
+            self.catch_leaf_switcher()
             self.brain.set_state(self.go_home)
 
     def go_home(self):
         anthill_x = self.game.anthill.x
         anthill_y = self.game.anthill.y
         self.common_run(anthill_x, anthill_y)
-        if self.get_distance(anthill_x, anthill_y) < 5:
+        if int(self.get_distance(anthill_x, anthill_y)) < CATCH_DISTANCE:
             self.brain.set_state(self.find_leaf)
 
     def get_distance(self, target_x, target_y):
         dist = math.sqrt((abs(target_x - self.x)) ^ 2 + abs((target_y - self.y) ^ 2))
+        print(dist)
         return dist
 
     def catch_leaf_switcher(self):
@@ -161,9 +167,11 @@ class Game:
             self.anthill.render()
 
             self.ant.update()
+            if self.ant.catch_leaf:
+                self.leaf.generate_new_coords
+                self.ant.catch_leaf_switcher()
 
-            # if not self.ant.catch_leaf:
-            #     self.ant.update(self.leaf.x, self.leaf.y, 10)
+
             pygame.display.update()
             pygame.time.delay(150)
 
