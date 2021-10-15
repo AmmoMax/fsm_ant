@@ -13,6 +13,7 @@ WHITE = [255, 255, 255]
 GREEN = [0, 100, 0]
 BROWN = [128, 0, 0]
 GREEN_GRASS = [85, 107, 47]
+ANT_SPEED = 10
 game_exit = False
 
 
@@ -49,36 +50,40 @@ class AntHill(BaseGameObject):
 
 
 class Ant(BaseGameObject):
-    def __init__(self, *args):
+    def __init__(self, *args, game):
         super().__init__(*args)
         self.__catch_leaf = False
         self.brain = FSM()
         self.brain.set_state(self.find_leaf)
+        self.game = game
 
-    def common_run(self, leaf_x, leaf_y, speed):
-        if self.x < leaf_x:
-            self.x += speed
-        elif self.x > leaf_x:
-            self.x -= speed
+    def common_run(self, obj_x, obj_y):
+        if self.x < obj_x:
+            self.x += ANT_SPEED
+        elif self.x > obj_x:
+            self.x -= ANT_SPEED
 
-        if self.y < leaf_y:
-            self.y += speed
-        elif self.y > leaf_y:
-            self.y -= speed
+        if self.y < obj_y:
+            self.y += ANT_SPEED
+        elif self.y > obj_y:
+            self.y -= ANT_SPEED
 
-    def find_leaf(self, leaf_x, leaf_y, speed):
-        self.common_run(leaf_x, leaf_y, speed)
+    def find_leaf(self):
+        leaf_x = self.game.leaf.x
+        leaf_y = self.game.leaf.y
+        self.common_run(leaf_x, leaf_y)
         if self.get_distance(leaf_x, leaf_y) < 5:
             self.brain.set_state(self.go_home)
 
-    def go_home(self, anthill_x, anthill_y, speed):
-        self.common_run(anthill_x, anthill_y, speed)
+    def go_home(self):
+        anthill_x = self.game.anthill.x
+        anthill_y = self.game.anthill.y
+        self.common_run(anthill_x, anthill_y)
         if self.get_distance(anthill_x, anthill_y) < 5:
             self.brain.set_state(self.find_leaf)
 
     def get_distance(self, target_x, target_y):
-        dist = math.sqrt((target_x - self.x) ^ 2 + (target_y - self.y) ^ 2)
-        print(dist)
+        dist = math.sqrt((abs(target_x - self.x)) ^ 2 + abs((target_y - self.y) ^ 2))
         return dist
 
     def catch_leaf_switcher(self):
@@ -108,14 +113,13 @@ class Game:
         screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
         return screen
 
-
     def intersect(self, x1, y1, size1, x2, y2, size2):
         if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
             return True
         return False
 
     def __get_ant(self):
-        ant = Ant(50, 50, 10, self.screen, BLACK)
+        ant = Ant(50, 50, 10, self.screen, BLACK, game=self)
         return ant
 
     def __get_leaf(self):
@@ -156,8 +160,10 @@ class Game:
             self.leaf.render()
             self.anthill.render()
 
-            if not self.ant.catch_leaf:
-                self.ant.update(self.leaf.x, self.leaf.y, 10)
+            self.ant.update()
+
+            # if not self.ant.catch_leaf:
+            #     self.ant.update(self.leaf.x, self.leaf.y, 10)
             pygame.display.update()
             pygame.time.delay(150)
 
