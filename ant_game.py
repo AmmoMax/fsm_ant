@@ -1,5 +1,6 @@
 import math
 import sys
+from typing import Tuple
 
 import pygame
 import random
@@ -14,10 +15,11 @@ GREEN = [0, 100, 0]
 BROWN = [128, 0, 0]
 GREEN_GRASS = [85, 107, 47]
 ANT_SPEED = 10
+MOUSE_THREAT_DISTANCE = 6
 
 # TODO: исправить логику движения муравья т.к. сейчас из за примитивного расчета движения
 # попадаются случаи когда муравей и дошел до цели и не дошел
-CATCH_DISTANCE = 3
+CATCH_DISTANCE = 5
 game_exit = False
 
 
@@ -80,6 +82,13 @@ class Ant(BaseGameObject):
             self.catch_leaf_switcher()
             self.brain.set_state(self.go_home)
 
+        # mouse_pos: Tuple = self.game.get_mouse_pos()
+        # mouse_x = mouse_pos[0]
+        # mouse_y = mouse_pos[1]
+        # distance = self.get_distance(mouse_x, mouse_y)
+        if self.get_distance_mouse() < MOUSE_THREAT_DISTANCE:
+            self.brain.set_state(self.run_away)
+
     def go_home(self):
         anthill_x = self.game.anthill.x
         anthill_y = self.game.anthill.y
@@ -87,10 +96,21 @@ class Ant(BaseGameObject):
         if int(self.get_distance(anthill_x, anthill_y)) < CATCH_DISTANCE:
             self.brain.set_state(self.find_leaf)
 
+    def run_away(self):
+        self.common_run(0, 0)
+        if self.get_distance_mouse() > MOUSE_THREAT_DISTANCE:
+            self.brain.set_state(self.find_leaf)
+
     def get_distance(self, target_x, target_y):
         dist = math.sqrt((abs(target_x - self.x)) ^ 2 + abs((target_y - self.y) ^ 2))
-        print(dist)
         return dist
+
+    def get_distance_mouse(self):
+        mouse_pos: Tuple = self.game.get_mouse_pos()
+        mouse_x = mouse_pos[0]
+        mouse_y = mouse_pos[1]
+        distance = self.get_distance(mouse_x, mouse_y)
+        return int(distance)
 
     def catch_leaf_switcher(self):
         if self.__catch_leaf:
@@ -119,10 +139,10 @@ class Game:
         screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
         return screen
 
-    def intersect(self, x1, y1, size1, x2, y2, size2):
-        if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
-            return True
-        return False
+    # def intersect(self, x1, y1, size1, x2, y2, size2):
+    #     if x1 > x2 - size1 and x1 < x2 + size1 and y1 > y2 - size2 and y1 < y2 +size2:
+    #         return True
+    #     return False
 
     def __get_ant(self):
         ant = Ant(50, 50, 10, self.screen, BLACK, game=self)
@@ -170,7 +190,6 @@ class Game:
             if self.ant.catch_leaf:
                 self.leaf.generate_new_coords
                 self.ant.catch_leaf_switcher()
-
 
             pygame.display.update()
             pygame.time.delay(150)
