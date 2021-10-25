@@ -14,12 +14,12 @@ WHITE = [255, 255, 255]
 GREEN = [0, 100, 0]
 BROWN = [128, 0, 0]
 GREEN_GRASS = [85, 107, 47]
-ANT_SPEED = 10
+BLOCK_SIZE = 10
 MOUSE_THREAT_DISTANCE = 6
 
 # TODO: исправить логику движения муравья т.к. сейчас из за примитивного расчета движения
 # попадаются случаи когда муравей и дошел до цели и не дошел
-CATCH_DISTANCE = 5
+CATCH_DISTANCE = 4
 game_exit = False
 
 
@@ -65,19 +65,20 @@ class Ant(BaseGameObject):
 
     def common_run(self, obj_x, obj_y):
         if self.x < obj_x:
-            self.x += ANT_SPEED
+            self.x += BLOCK_SIZE
         elif self.x > obj_x:
-            self.x -= ANT_SPEED
+            self.x -= BLOCK_SIZE
 
         if self.y < obj_y:
-            self.y += ANT_SPEED
+            self.y += BLOCK_SIZE
         elif self.y > obj_y:
-            self.y -= ANT_SPEED
+            self.y -= BLOCK_SIZE
 
     def find_leaf(self):
         leaf_x = self.game.leaf.x
         leaf_y = self.game.leaf.y
         self.common_run(leaf_x, leaf_y)
+        print(f'dist to leaf: {self.get_distance(leaf_x, leaf_y)}')
         if int(self.get_distance(leaf_x, leaf_y)) < CATCH_DISTANCE:
             self.catch_leaf_switcher()
             self.brain.set_state(self.go_home)
@@ -110,6 +111,7 @@ class Ant(BaseGameObject):
         mouse_x = mouse_pos[0]
         mouse_y = mouse_pos[1]
         distance = self.get_distance(mouse_x, mouse_y)
+        print(int(distance))
         return int(distance)
 
     def catch_leaf_switcher(self):
@@ -158,13 +160,15 @@ class Game:
         anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, self.screen, BROWN)
         return anthill
 
-    def check_input(self):
+    @staticmethod
+    def check_input():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-    def get_mouse_pos(self):
+    @staticmethod
+    def get_mouse_pos():
         pygame.mouse.set_visible(True)
         pointer = pygame.mouse.get_pos()
         pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
