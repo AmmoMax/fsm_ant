@@ -9,6 +9,7 @@ from fsm import FSM
 
 
 SIZE_SCREEN = {'x': 400, 'y': 400}
+SIZE_STATUS_BAR = [SIZE_SCREEN.get('x'), 50]
 BLACK = [0, 0, 0]
 WHITE = [255, 255, 255]
 GREEN = [0, 100, 0]
@@ -79,6 +80,8 @@ class Ant(BaseGameObject):
         leaf_y = self.game.leaf.y
         self.common_run(leaf_x, leaf_y)
         print(f'dist to leaf: {self.get_distance(leaf_x, leaf_y)}')
+        if self.get_distance_mouse() < MOUSE_THREAT_DISTANCE:
+            self.brain.set_state(self.run_away)
         if int(self.get_distance(leaf_x, leaf_y)) < CATCH_DISTANCE:
             self.catch_leaf_switcher()
             self.brain.set_state(self.go_home)
@@ -87,8 +90,6 @@ class Ant(BaseGameObject):
         # mouse_x = mouse_pos[0]
         # mouse_y = mouse_pos[1]
         # distance = self.get_distance(mouse_x, mouse_y)
-        if self.get_distance_mouse() < MOUSE_THREAT_DISTANCE:
-            self.brain.set_state(self.run_away)
 
     def go_home(self):
         anthill_x = self.game.anthill.x
@@ -131,14 +132,15 @@ class Ant(BaseGameObject):
 class Game:
     def __init__(self):
         pygame.init()
+        self.window = self.__get_window()
         self.screen = self.__get_screen()
         self.ant = self.__get_ant()
         self.leaf = self.__get_leaf()
         self.anthill = self.__get_anthill()
+        self.status_bar = self.__get_status_bar()
 
-    def __get_screen(self):
-        pygame.display.set_caption('Ant FSM')
-        screen = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y')])
+    def __get_screen(self) -> pygame.Surface:
+        screen = pygame.Surface([SIZE_SCREEN['x'], SIZE_SCREEN['y']])
         return screen
 
     # def intersect(self, x1, y1, size1, x2, y2, size2):
@@ -157,8 +159,19 @@ class Game:
         return leaf
 
     def __get_anthill(self):
-        anthill = AntHill(random.randint(1, 400), random.randint(1, 400), 10, self.screen, BROWN)
+        anthill = AntHill(random.randint(1, SIZE_SCREEN.get('x')),
+                          random.randint(1, SIZE_SCREEN.get('y')), 10, self.screen, BROWN)
         return anthill
+
+    def __get_status_bar(self):
+        status_bar = pygame.Surface((SIZE_SCREEN['x'], 50))
+        status_bar.fill(WHITE)
+        return status_bar
+
+    def __get_window(self):
+        pygame.display.set_caption('Ant FSM')
+        window = pygame.display.set_mode([SIZE_SCREEN.get('x'), SIZE_SCREEN.get('y') + SIZE_STATUS_BAR[1]])
+        return window
 
     @staticmethod
     def check_input():
@@ -195,6 +208,8 @@ class Game:
                 self.leaf.generate_new_coords
                 self.ant.catch_leaf_switcher()
 
+            self.window.blit(self.status_bar, [0, 0])
+            self.window.blit(self.screen, [0, 50])
             pygame.display.update()
             pygame.time.delay(150)
 
