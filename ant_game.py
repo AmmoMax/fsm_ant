@@ -187,6 +187,9 @@ class Game:
         pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
         return pointer
 
+    def draw_mouse_circle(self, color=WHITE, radius=30, width=1):
+        pygame.draw.circle(self.screen, color, self.get_mouse_pos(), radius, width)
+
     def run(self):
         while True:
             self.screen.fill(GREEN_GRASS)
@@ -203,6 +206,8 @@ class Game:
             self.leaf.render()
             self.anthill.render()
 
+            self.draw_mouse_circle()
+
             self.ant.update()
             if self.ant.catch_leaf:
                 self.leaf.generate_new_coords
@@ -211,7 +216,7 @@ class Game:
             self.window.blit(self.status_bar, [0, 0])
             self.window.blit(self.screen, [0, 50])
             pygame.display.update()
-            pygame.time.delay(150)
+            pygame.time.delay(100)
 
 
 if __name__ == '__main__':
